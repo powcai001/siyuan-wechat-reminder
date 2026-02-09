@@ -1,10 +1,10 @@
 {
-  "name": "plugin-sample-vite-svelte",
-  "author": "frostime",
-  "url": "https://github.com/siyuan-note/plugin-sample-vite-svelte",
-  "version": "0.4.1",
+  "name": "wechat-reminder",
+  "author": "Codex",
+  "url": "https://github.com/siyuan-note/siyuan-wechat-reminder",
+  "version": "0.1.0",
   "minAppVersion": "3.2.1",
-  "disabledInPublish": true,
+  "disabledInPublish": false,
   "backends": [
     "windows",
     "linux",
@@ -22,12 +22,12 @@
     "desktop-window"
   ],
   "displayName": {
-    "default": "Plugin sample with vite and svelte",
-    "zh_CN": "插件样例 vite + svelte 版"
+    "default": "SiYuan WeChat Reminder",
+    "zh_CN": "思源微信提醒"
   },
   "description": {
-    "default": "SiYuan plugin sample with vite and svelte",
-    "zh_CN": "使用 vite 和 svelte 开发的思源插件样例"
+    "default": "Create scheduled reminders from selected text and deliver with GitHub Actions + PushPlus.",
+    "zh_CN": "将选中文本创建为定时提醒，并通过 GitHub Actions + PushPlus 发送到微信。"
   },
   "readme": {
     "default": "README.md",
@@ -37,12 +37,12 @@
     "openCollective": "",
     "patreon": "",
     "github": "",
-    "custom": [
-      "https://ld246.com/sponsor"
-    ]
+    "custom": []
   },
   "keywords": [
-    "sample",
-    "示例"
+    "reminder",
+    "wechat",
+    "pushplus",
+    "思源"
   ]
 }
