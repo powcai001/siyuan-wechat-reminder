@@ -1,8 +1,8 @@
 {
-  "name": "plugin-sample-vite-svelte",
-  "version": "0.4.1",
+  "name": "siyuan-wechat-reminder",
+  "version": "0.1.0",
   "type": "module",
-  "description": "This is a sample plugin based on vite and svelte for Siyuan (https://b3log.org/siyuan)",
+  "description": "SiYuan plugin for scheduled WeChat reminders via GitHub Actions + PushPlus",
   "repository": "",
   "homepage": "",
   "author": "frostime",
