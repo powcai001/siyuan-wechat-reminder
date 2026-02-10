@@ -1,4 +1,4 @@
-import {
+﻿import {
     Plugin,
     showMessage,
     confirm,
@@ -40,13 +40,33 @@ import { svelteDialog } from "./libs/dialog";
 const STORAGE_NAME = "menu-config";
 const TAB_TYPE = "custom_tab";
 const DOCK_TYPE = "dock_tab";
+const REMINDER_CONFIG_STORAGE_NAME = "wechat-reminder-config";
+
+interface WechatReminderConfig {
+    githubRepo: string;
+    githubToken: string;
+    reminderLabel: string;
+    notifyType: string;
+    reminderFilePath: string;
+    githubBranch: string;
+}
 
 export default class PluginSample extends Plugin {
 
     private custom: () => Custom;
     private isMobile: boolean;
     private blockIconEventBindThis = this.blockIconEvent.bind(this);
+    private contentMenuEventBindThis = this.contentMenuEvent.bind(this);
     private settingUtils: SettingUtils;
+    private reminderConfig: WechatReminderConfig = {
+        githubRepo: "",
+        githubToken: "",
+        reminderLabel: "鎻愰啋",
+        notifyType: "wechat",
+        reminderFilePath: "data/reminders.json",
+        githubBranch: "main",
+    };
+    private readonly reminderLogPrefix = "[wechat-reminder]";
 
 
     updateProtyleToolbar(toolbar: Array<string | IMenuItem>) {
@@ -54,24 +74,40 @@ export default class PluginSample extends Plugin {
         toolbar.push({
             name: "insert-smail-emoji",
             icon: "iconEmoji",
-            hotkey: "⇧⌘I",
+            hotkey: "鈬р寴I",
             tipPosition: "n",
             tip: this.i18n.insertEmoji,
             click(protyle: Protyle) {
-                protyle.insert("😊");
+                protyle.insert("馃槉");
             }
         });
         return toolbar;
     }
 
     async onload() {
+        // console.log("Hello World");
+        console.log(this.reminderLogPrefix, "onload start");
+
         this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
+        const savedConfig = await this.loadData(REMINDER_CONFIG_STORAGE_NAME);
+        if (savedConfig && typeof savedConfig === "object") {
+            this.reminderConfig = {
+                ...this.reminderConfig,
+                ...savedConfig,
+            };
+        }
+        console.log(this.reminderLogPrefix, "loaded config", {
+            githubRepo: this.reminderConfig.githubRepo,
+            reminderLabel: this.reminderConfig.reminderLabel,
+            notifyType: this.reminderConfig.notifyType,
+            hasToken: Boolean(this.reminderConfig.githubToken),
+        });
 
         console.log("loading plugin-sample", this.i18n);
 
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
-        // 图标的制作参见帮助文档
+        // 鍥炬爣鐨勫埗浣滃弬瑙佸府鍔╂枃妗?
         this.addIcons(`<symbol id="iconFace" viewBox="0 0 32 32">
 <path d="M13.667 17.333c0 0.92-0.747 1.667-1.667 1.667s-1.667-0.747-1.667-1.667 0.747-1.667 1.667-1.667 1.667 0.747 1.667 1.667zM20 15.667c-0.92 0-1.667 0.747-1.667 1.667s0.747 1.667 1.667 1.667 1.667-0.747 1.667-1.667-0.747-1.667-1.667-1.667zM29.333 16c0 7.36-5.973 13.333-13.333 13.333s-13.333-5.973-13.333-13.333 5.973-13.333 13.333-13.333 13.333 5.973 13.333 13.333zM14.213 5.493c1.867 3.093 5.253 5.173 9.12 5.173 0.613 0 1.213-0.067 1.787-0.16-1.867-3.093-5.253-5.173-9.12-5.173-0.613 0-1.213 0.067-1.787 0.16zM5.893 12.627c2.28-1.293 4.040-3.4 4.88-5.92-2.28 1.293-4.040 3.4-4.88 5.92zM26.667 16c0-1.040-0.16-2.040-0.44-2.987-0.933 0.2-1.893 0.32-2.893 0.32-4.173 0-7.893-1.92-10.347-4.92-1.4 3.413-4.187 6.093-7.653 7.4 0.013 0.053 0 0.12 0 0.187 0 5.88 4.787 10.667 10.667 10.667s10.667-4.787 10.667-10.667z"></path>
 </symbol>
@@ -105,7 +141,7 @@ export default class PluginSample extends Plugin {
 
         this.addCommand({
             langKey: "showDialog",
-            hotkey: "⇧⌘O",
+            hotkey: "鈬р寴O",
             callback: () => {
                 this.showDialog();
             },
@@ -113,7 +149,7 @@ export default class PluginSample extends Plugin {
 
         this.addCommand({
             langKey: "getTab",
-            hotkey: "⇧⌘M",
+            hotkey: "鈬р寴M",
             globalCallback: () => {
                 console.log(this.getOpenedTab());
             },
@@ -125,7 +161,7 @@ export default class PluginSample extends Plugin {
                 size: { width: 200, height: 0 },
                 icon: "iconSaving",
                 title: "Custom Dock",
-                hotkey: "⌥⌘W",
+                hotkey: "鈱モ寴W",
             },
             data: {
                 text: "This is my custom dock"
@@ -155,7 +191,7 @@ export default class PluginSample extends Plugin {
                             Custom Dock
                         </div>
                         <span class="fn__flex-1 fn__space"></span>
-                        <span data-type="min" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="Min ${adaptHotkey("⌘W")}"><svg class="block__logoicon"><use xlink:href="#iconMin"></use></svg></span>
+                        <span data-type="min" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="Min ${adaptHotkey("鈱榃")}"><svg class="block__logoicon"><use xlink:href="#iconMin"></use></svg></span>
                     </div>
                     <div class="fn__flex-1 plugin-sample__custom-dock">
                         ${dock.data.text}
@@ -303,13 +339,16 @@ export default class PluginSample extends Plugin {
             console.error("Error loading settings storage, probably empty config json:", error);
         }
 
+        this.eventBus.on("open-menu-content", this.contentMenuEventBindThis);
+        console.log(this.reminderLogPrefix, "eventBus on: open-menu-content");
+
 
         this.protyleSlash = [{
-            filter: ["insert emoji 😊", "插入表情 😊", "crbqwx"],
-            html: `<div class="b3-list-item__first"><span class="b3-list-item__text">${this.i18n.insertEmoji}</span><span class="b3-list-item__meta">😊</span></div>`,
+            filter: ["insert emoji 馃槉", "鎻掑叆琛ㄦ儏 馃槉", "crbqwx"],
+            html: `<div class="b3-list-item__first"><span class="b3-list-item__text">${this.i18n.insertEmoji}</span><span class="b3-list-item__meta">馃槉</span></div>`,
             id: "insertEmoji",
             callback(protyle: Protyle) {
-                protyle.insert("😊");
+                protyle.insert("馃槉");
             }
         }];
 
@@ -348,7 +387,7 @@ export default class PluginSample extends Plugin {
                     this.addMenu();
                 } else {
                     let rect = topBarElement.getBoundingClientRect();
-                    // 如果被隐藏，则使用更多按钮
+                    // 濡傛灉琚殣钘忥紝鍒欎娇鐢ㄦ洿澶氭寜閽?
                     if (rect.width === 0) {
                         rect = document.querySelector("#barMore").getBoundingClientRect();
                     }
@@ -367,7 +406,7 @@ export default class PluginSample extends Plugin {
     </svg>
 </div>`;
         statusIconTemp.content.firstElementChild.addEventListener("click", () => {
-            confirm("⚠️", this.i18n.confirmRemove.replace("${name}", this.name), () => {
+            confirm("鈿狅笍", this.i18n.confirmRemove.replace("${name}", this.name), () => {
                 this.removeData(STORAGE_NAME).then(() => {
                     this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
                     showMessage(`[${this.name}]: ${this.i18n.removedData}`);
@@ -390,6 +429,8 @@ export default class PluginSample extends Plugin {
     }
 
     async onunload() {
+        this.eventBus.off("open-menu-content", this.contentMenuEventBindThis);
+        console.log(this.reminderLogPrefix, "eventBus off: open-menu-content");
         console.log(this.i18n.byePlugin);
         showMessage("Goodbye SiYuan Plugin");
         console.log("onunload");
@@ -431,9 +472,9 @@ export default class PluginSample extends Plugin {
     }
 
     private eventBusPaste(event: any) {
-        // 如果需异步处理请调用 preventDefault， 否则会进行默认处理
+        // 濡傛灉闇€寮傛澶勭悊璇疯皟鐢?preventDefault锛?鍚﹀垯浼氳繘琛岄粯璁ゅ鐞?
         event.preventDefault();
-        // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
+        // 濡傛灉浣跨敤浜?preventDefault锛屽繀椤昏皟鐢?resolve锛屽惁鍒欑▼搴忎細鍗℃
         event.detail.resolve({
             textPlain: event.detail.textPlain.trim(),
         });
@@ -464,6 +505,314 @@ export default class PluginSample extends Plugin {
                 detail.protyle.getInstance().transaction(doOperations);
             }
         });
+    }
+
+    private contentMenuEvent({ detail }: any) {
+        const selectedText = this.getSelectedText(detail);
+        console.log(this.reminderLogPrefix, "content menu opened", {
+            selectedLength: selectedText.length,
+            selectedPreview: selectedText.slice(0, 60),
+            detailKeys: detail ? Object.keys(detail) : [],
+        });
+        detail.menu.addItem({
+            id: "wechat_reminder_create",
+            iconHTML: "",
+            label: "寰俊瀹氭椂鎻愰啋",
+            click: async () => {
+                await this.createWechatReminder(selectedText);
+            }
+        });
+        detail.menu.addItem({
+            id: "wechat_reminder_config",
+            iconHTML: "",
+            label: "閰嶇疆鎻愰啋浠撳簱",
+            click: async () => {
+                await this.configureReminderRepo();
+            }
+        });
+        detail.menu.addItem({
+            id: "wechat_reminder_test",
+            iconHTML: "",
+            label: "Send test reminder",
+            click: async () => {
+                await this.createTestReminder(selectedText);
+            }
+        });
+    }
+
+    private getSelectedText(detail: any): string {
+        const fromDetail = (detail?.text || detail?.selectedText || detail?.range?.toString?.() || "").trim();
+        if (fromDetail) {
+            console.log(this.reminderLogPrefix, "selection from detail");
+            return fromDetail;
+        }
+        const fromWindow = (window.getSelection?.()?.toString?.() || "").trim();
+        console.log(this.reminderLogPrefix, "selection from window.getSelection", {
+            selectedLength: fromWindow.length,
+            selectedPreview: fromWindow.slice(0, 60),
+        });
+        return fromWindow;
+    }
+
+    private async configureReminderRepo() {
+        console.log(this.reminderLogPrefix, "configureReminderRepo start");
+        const inputRepo = window.prompt("GitHub repository (owner/repo)", this.reminderConfig.githubRepo);
+        if (inputRepo === null) {
+            return;
+        }
+        const inputToken = window.prompt(
+            "GitHub token (need contents:write)",
+            this.reminderConfig.githubToken
+        );
+        if (inputToken === null) {
+            return;
+        }
+        const inputLabel = window.prompt("Reminder label (optional)", this.reminderConfig.reminderLabel);
+        const inputNotifyType = window.prompt("Notify type (default: wechat)", this.reminderConfig.notifyType);
+        const inputFilePath = window.prompt("Reminder file path", this.reminderConfig.reminderFilePath);
+        const inputBranch = window.prompt("Git branch", this.reminderConfig.githubBranch);
+
+        this.reminderConfig.githubRepo = this.normalizeGithubRepo(inputRepo);
+        this.reminderConfig.githubToken = inputToken.trim();
+        this.reminderConfig.reminderLabel = (inputLabel || "reminder").trim();
+        this.reminderConfig.notifyType = (inputNotifyType || "wechat").trim();
+        this.reminderConfig.reminderFilePath = (inputFilePath || "data/reminders.json").trim();
+        this.reminderConfig.githubBranch = (inputBranch || "main").trim();
+
+        await this.saveData(REMINDER_CONFIG_STORAGE_NAME, this.reminderConfig);
+        console.log(this.reminderLogPrefix, "config saved", {
+            githubRepo: this.reminderConfig.githubRepo,
+            reminderLabel: this.reminderConfig.reminderLabel,
+            notifyType: this.reminderConfig.notifyType,
+            reminderFilePath: this.reminderConfig.reminderFilePath,
+            githubBranch: this.reminderConfig.githubBranch,
+            hasToken: Boolean(this.reminderConfig.githubToken),
+        });
+        showMessage("Reminder config saved");
+    }
+
+    private async createWechatReminder(selectedText: string) {
+        console.log(this.reminderLogPrefix, "createWechatReminder called", {
+            selectedLength: selectedText.length,
+            selectedPreview: selectedText.slice(0, 60),
+        });
+        if (!selectedText) {
+            showMessage("Please select text first");
+            return;
+        }
+        if (!this.reminderConfig.githubRepo || !this.reminderConfig.githubToken) {
+            await this.configureReminderRepo();
+        }
+        if (!this.reminderConfig.githubRepo || !this.reminderConfig.githubToken) {
+            showMessage("Please configure repository and token first");
+            return;
+        }
+
+        const defaultStart = this.getDefaultStartTime();
+        const startTime = window.prompt("Start time (YYYY-MM-DD HH:mm)", defaultStart);
+        if (!startTime) {
+            return;
+        }
+        const defaultTitle = selectedText.replace(/\s+/g, " ").slice(0, 24) || "New reminder";
+        const title = window.prompt("Title", defaultTitle);
+        if (!title) {
+            return;
+        }
+        const content = window.prompt("Content", selectedText) || selectedText;
+        const taskItemsRaw = window.prompt("Task list (multi-line)", selectedText) || selectedText;
+        const taskItems = taskItemsRaw
+            .split("\n")
+            .map((line) => line.replace(/^- /, "").trim())
+            .filter(Boolean);
+
+        const record = this.buildReminderRecord({
+            startTime: startTime.trim(),
+            title: title.trim(),
+            content: content.trim(),
+            notifyType: this.reminderConfig.notifyType,
+            taskItems,
+        });
+
+        try {
+            const commitUrl = await this.enqueueReminderRecord(
+                this.reminderConfig.githubRepo,
+                this.reminderConfig.githubToken,
+                this.reminderConfig.reminderFilePath,
+                this.reminderConfig.githubBranch,
+                record,
+            );
+            console.log(this.reminderLogPrefix, "reminder record committed", { commitUrl });
+            showMessage("Reminder queued: " + commitUrl);
+        } catch (error) {
+            console.error(this.reminderLogPrefix, "enqueue reminder failed", error);
+            showMessage("Failed to queue reminder. Check token/repo/path.");
+        }
+    }
+
+    private async createTestReminder(selectedText: string) {
+        console.log(this.reminderLogPrefix, "createTestReminder called", {
+            selectedLength: selectedText.length,
+        });
+        if (!this.reminderConfig.githubRepo || !this.reminderConfig.githubToken) {
+            await this.configureReminderRepo();
+        }
+        if (!this.reminderConfig.githubRepo || !this.reminderConfig.githubToken) {
+            showMessage("Please configure repository and token first");
+            return;
+        }
+
+        const now = new Date(Date.now() + 60 * 1000);
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        const hh = String(now.getHours()).padStart(2, "0");
+        const mi = String(now.getMinutes()).padStart(2, "0");
+        const startTime = `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+
+        const content = selectedText || "SiYuan reminder test";
+        const title = `test-${hh}${mi}`;
+
+        const record = this.buildReminderRecord({
+            startTime,
+            title,
+            content,
+            notifyType: this.reminderConfig.notifyType,
+            taskItems: [content],
+        });
+
+        try {
+            const commitUrl = await this.enqueueReminderRecord(
+                this.reminderConfig.githubRepo,
+                this.reminderConfig.githubToken,
+                this.reminderConfig.reminderFilePath,
+                this.reminderConfig.githubBranch,
+                record,
+            );
+            console.log(this.reminderLogPrefix, "test reminder queued", { commitUrl, startTime });
+            showMessage("Test reminder queued: " + commitUrl);
+        } catch (error) {
+            console.error(this.reminderLogPrefix, "create test reminder failed", error);
+            showMessage("Failed to queue test reminder");
+        }
+    }
+
+    private buildReminderRecord(options: {
+        startTime: string;
+        title: string;
+        content: string;
+        notifyType: string;
+        taskItems: string[];
+    }) {
+        return {
+            id: `r_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            startTime: options.startTime,
+            title: options.title,
+            content: options.content,
+            notifyType: options.notifyType,
+            taskItems: options.taskItems,
+            status: "pending",
+            createdAt: new Date().toISOString(),
+        };
+    }
+
+    private async enqueueReminderRecord(
+        repo: string,
+        token: string,
+        filePath: string,
+        branch: string,
+        record: Record<string, any>,
+    ): Promise<string> {
+        const file = await this.getGithubFile(repo, token, filePath, branch);
+        let reminders: any[] = [];
+        if (file.contentText.trim()) {
+            const parsed = JSON.parse(file.contentText);
+            reminders = Array.isArray(parsed) ? parsed : [];
+        }
+        reminders.push(record);
+
+        const commitMessage = `chore: add reminder ${record.id}`;
+        const res = await this.putGithubFile(repo, token, filePath, branch, reminders, file.sha, commitMessage);
+        return res.commit?.html_url || "committed";
+    }
+
+    private async getGithubFile(repo: string, token: string, filePath: string, branch: string): Promise<{ sha: string | null; contentText: string }> {
+        const url = `https://api.github.com/repos/${repo}/contents/${filePath}?ref=${encodeURIComponent(branch)}`;
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Accept": "application/vnd.github+json",
+                "Authorization": `Bearer ${token}`,
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+        });
+
+        if (response.status === 404) {
+            return { sha: null, contentText: "[]" };
+        }
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`GitHub read file failed (${response.status}): ${errorText}`);
+        }
+
+        const data = await response.json();
+        const encoded = (data.content || "").replace(/\n/g, "");
+        const contentText = encoded ? atob(encoded) : "[]";
+        return { sha: data.sha || null, contentText };
+    }
+
+    private async putGithubFile(
+        repo: string,
+        token: string,
+        filePath: string,
+        branch: string,
+        data: unknown,
+        sha: string | null,
+        message: string,
+    ): Promise<any> {
+        const contentText = JSON.stringify(data, null, 2) + "\n";
+        const contentBase64 = btoa(unescape(encodeURIComponent(contentText)));
+        const body: Record<string, any> = {
+            message,
+            content: contentBase64,
+            branch,
+        };
+        if (sha) {
+            body.sha = sha;
+        }
+
+        const response = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+            method: "PUT",
+            headers: {
+                "Accept": "application/vnd.github+json",
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`GitHub write file failed (${response.status}): ${errorText}`);
+        }
+        return response.json();
+    }
+
+    private getDefaultStartTime(): string {
+        const now = new Date(Date.now() + 10 * 60 * 1000);
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hour = String(now.getHours()).padStart(2, "0");
+        const minute = String(now.getMinutes()).padStart(2, "0");
+        return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+
+    private normalizeGithubRepo(repo: string): string {
+        return repo
+            .trim()
+            .replace(/^https?:\/\/github\.com\//, "")
+            .replace(/\/+$/, "");
     }
 
     private showDialog() {
@@ -499,6 +848,14 @@ export default class PluginSample extends Plugin {
             label: "Open Plugin Setting",
             click: () => {
                 this.openSetting();
+            }
+        });
+        menu.addItem({
+            icon: "iconInfo",
+            label: "Send test reminder",
+            click: async () => {
+                const selectedText = (window.getSelection?.()?.toString?.() || "").trim();
+                await this.createTestReminder(selectedText);
             }
         });
         menu.addSeparator();
@@ -1009,3 +1366,6 @@ export default class PluginSample extends Plugin {
         return editors[0];
     }
 }
+
+
+
