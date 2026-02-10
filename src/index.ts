@@ -1,4 +1,4 @@
-﻿import {
+import {
     Plugin,
     showMessage,
     confirm,
@@ -61,7 +61,7 @@ export default class PluginSample extends Plugin {
     private reminderConfig: WechatReminderConfig = {
         githubRepo: "",
         githubToken: "",
-        reminderLabel: "鎻愰啋",
+        reminderLabel: "提醒",
         notifyType: "wechat",
         reminderFilePath: "data/reminders.json",
         githubBranch: "main",
@@ -74,11 +74,11 @@ export default class PluginSample extends Plugin {
         toolbar.push({
             name: "insert-smail-emoji",
             icon: "iconEmoji",
-            hotkey: "鈬р寴I",
+            hotkey: "⇧⌘I",
             tipPosition: "n",
             tip: this.i18n.insertEmoji,
             click(protyle: Protyle) {
-                protyle.insert("馃槉");
+                protyle.insert("😊");
             }
         });
         return toolbar;
@@ -107,7 +107,7 @@ export default class PluginSample extends Plugin {
 
         const frontEnd = getFrontend();
         this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
-        // 鍥炬爣鐨勫埗浣滃弬瑙佸府鍔╂枃妗?
+        // 图标的制作参见帮助文档
         this.addIcons(`<symbol id="iconFace" viewBox="0 0 32 32">
 <path d="M13.667 17.333c0 0.92-0.747 1.667-1.667 1.667s-1.667-0.747-1.667-1.667 0.747-1.667 1.667-1.667 1.667 0.747 1.667 1.667zM20 15.667c-0.92 0-1.667 0.747-1.667 1.667s0.747 1.667 1.667 1.667 1.667-0.747 1.667-1.667-0.747-1.667-1.667-1.667zM29.333 16c0 7.36-5.973 13.333-13.333 13.333s-13.333-5.973-13.333-13.333 5.973-13.333 13.333-13.333 13.333 5.973 13.333 13.333zM14.213 5.493c1.867 3.093 5.253 5.173 9.12 5.173 0.613 0 1.213-0.067 1.787-0.16-1.867-3.093-5.253-5.173-9.12-5.173-0.613 0-1.213 0.067-1.787 0.16zM5.893 12.627c2.28-1.293 4.040-3.4 4.88-5.92-2.28 1.293-4.040 3.4-4.88 5.92zM26.667 16c0-1.040-0.16-2.040-0.44-2.987-0.933 0.2-1.893 0.32-2.893 0.32-4.173 0-7.893-1.92-10.347-4.92-1.4 3.413-4.187 6.093-7.653 7.4 0.013 0.053 0 0.12 0 0.187 0 5.88 4.787 10.667 10.667 10.667s10.667-4.787 10.667-10.667z"></path>
 </symbol>
@@ -141,7 +141,7 @@ export default class PluginSample extends Plugin {
 
         this.addCommand({
             langKey: "showDialog",
-            hotkey: "鈬р寴O",
+            hotkey: "⇧⌘O",
             callback: () => {
                 this.showDialog();
             },
@@ -149,7 +149,7 @@ export default class PluginSample extends Plugin {
 
         this.addCommand({
             langKey: "getTab",
-            hotkey: "鈬р寴M",
+            hotkey: "⇧⌘M",
             globalCallback: () => {
                 console.log(this.getOpenedTab());
             },
@@ -161,7 +161,7 @@ export default class PluginSample extends Plugin {
                 size: { width: 200, height: 0 },
                 icon: "iconSaving",
                 title: "Custom Dock",
-                hotkey: "鈱モ寴W",
+                hotkey: "⌥⌘W",
             },
             data: {
                 text: "This is my custom dock"
@@ -191,7 +191,7 @@ export default class PluginSample extends Plugin {
                             Custom Dock
                         </div>
                         <span class="fn__flex-1 fn__space"></span>
-                        <span data-type="min" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="Min ${adaptHotkey("鈱榃")}"><svg class="block__logoicon"><use xlink:href="#iconMin"></use></svg></span>
+                        <span data-type="min" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="Min ${adaptHotkey("⌘W")}"><svg class="block__logoicon"><use xlink:href="#iconMin"></use></svg></span>
                     </div>
                     <div class="fn__flex-1 plugin-sample__custom-dock">
                         ${dock.data.text}
@@ -344,11 +344,11 @@ export default class PluginSample extends Plugin {
 
 
         this.protyleSlash = [{
-            filter: ["insert emoji 馃槉", "鎻掑叆琛ㄦ儏 馃槉", "crbqwx"],
-            html: `<div class="b3-list-item__first"><span class="b3-list-item__text">${this.i18n.insertEmoji}</span><span class="b3-list-item__meta">馃槉</span></div>`,
+            filter: ["insert emoji 😊", "插入表情 😊", "crbqwx"],
+            html: `<div class="b3-list-item__first"><span class="b3-list-item__text">${this.i18n.insertEmoji}</span><span class="b3-list-item__meta">😊</span></div>`,
             id: "insertEmoji",
             callback(protyle: Protyle) {
-                protyle.insert("馃槉");
+                protyle.insert("😊");
             }
         }];
 
@@ -387,7 +387,7 @@ export default class PluginSample extends Plugin {
                     this.addMenu();
                 } else {
                     let rect = topBarElement.getBoundingClientRect();
-                    // 濡傛灉琚殣钘忥紝鍒欎娇鐢ㄦ洿澶氭寜閽?
+                    // 如果被隐藏，则使用更多按钮
                     if (rect.width === 0) {
                         rect = document.querySelector("#barMore").getBoundingClientRect();
                     }
@@ -406,7 +406,7 @@ export default class PluginSample extends Plugin {
     </svg>
 </div>`;
         statusIconTemp.content.firstElementChild.addEventListener("click", () => {
-            confirm("鈿狅笍", this.i18n.confirmRemove.replace("${name}", this.name), () => {
+            confirm("⚠️", this.i18n.confirmRemove.replace("${name}", this.name), () => {
                 this.removeData(STORAGE_NAME).then(() => {
                     this.data[STORAGE_NAME] = { readonlyText: "Readonly" };
                     showMessage(`[${this.name}]: ${this.i18n.removedData}`);
@@ -472,9 +472,9 @@ export default class PluginSample extends Plugin {
     }
 
     private eventBusPaste(event: any) {
-        // 濡傛灉闇€寮傛澶勭悊璇疯皟鐢?preventDefault锛?鍚﹀垯浼氳繘琛岄粯璁ゅ鐞?
+        // 如果需异步处理请调用 preventDefault，否则会进行默认处理
         event.preventDefault();
-        // 濡傛灉浣跨敤浜?preventDefault锛屽繀椤昏皟鐢?resolve锛屽惁鍒欑▼搴忎細鍗℃
+        // 如果使用了 preventDefault，必须调用 resolve，否则程序会卡死
         event.detail.resolve({
             textPlain: event.detail.textPlain.trim(),
         });
@@ -517,7 +517,7 @@ export default class PluginSample extends Plugin {
         detail.menu.addItem({
             id: "wechat_reminder_create",
             iconHTML: "",
-            label: "寰俊瀹氭椂鎻愰啋",
+            label: "微信定时提醒",
             click: async () => {
                 await this.createWechatReminder(selectedText);
             }
@@ -525,7 +525,7 @@ export default class PluginSample extends Plugin {
         detail.menu.addItem({
             id: "wechat_reminder_config",
             iconHTML: "",
-            label: "閰嶇疆鎻愰啋浠撳簱",
+            label: "配置提醒仓库",
             click: async () => {
                 await this.configureReminderRepo();
             }
@@ -533,7 +533,7 @@ export default class PluginSample extends Plugin {
         detail.menu.addItem({
             id: "wechat_reminder_test",
             iconHTML: "",
-            label: "Send test reminder",
+            label: "发送测试提醒",
             click: async () => {
                 await this.createTestReminder(selectedText);
             }
@@ -1366,6 +1366,3 @@ export default class PluginSample extends Plugin {
         return editors[0];
     }
 }
-
-
-
